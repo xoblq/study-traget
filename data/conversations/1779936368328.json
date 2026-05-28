@@ -1,0 +1,26 @@
+{
+  "id": "1779936368328",
+  "title": "写一个抽奖的代码js",
+  "messages": [
+    {
+      "role": "user",
+      "content": "写一个抽奖的代码js"
+    },
+    {
+      "role": "assistant",
+      "content": "当然可以！下面是一个简单的 **JavaScript 抽奖代码示例**，你可以将其放在 HTML 文件中运行。这个抽奖程序会从一个数组中随机选择一个“中奖者”。\n\n---\n\n### 🎁 简单抽奖 JavaScript 示例（可直接运行）\n\n```html\n<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>简单抽奖</title>\n</head>\n<body>\n\n<h2>抽奖程序</h2>\n<p id=\"winner\">点击按钮开始抽奖...</p>\n<button onclick=\"draw()\">开始抽奖</button>\n\n<script>\n  // 抽奖名单（可以是姓名、ID等）\n  const participants = [\"张三\", \"李四\", \"王五\", \"赵六\", \"孙七\", \"周八\", \"吴九\", \"郑十\"];\n\n  function draw() {\n    if (participants.length === 0) {\n      alert(\"没有可抽奖的参与者！\");\n      return;\n    }\n\n    // 随机选择一个中奖者\n    const randomIndex = Math.floor(Math.random() * participants.length);\n    const winner = participants[randomIndex];\n\n    // 显示中奖者\n    document.getElementById(\"winner\").innerText = \"恭喜 \" + winner + \" 中奖了！\";\n\n    // 可选：移除中奖者，避免重复抽中\n    participants.splice(randomIndex, 1);\n  }\n</script>\n\n</body>\n</html>\n```\n\n---\n\n### ✅ 功能说明：\n\n- 有一个包含多个参与者的数组 `participants`。\n- 点击按钮后，使用 `Math.random()` 随机选择一个中奖者。\n- 中奖者名字显示在页面上。\n- 如果你希望每次抽奖不重复，可以使用 `splice()` 移除已中奖的人。\n\n---\n\n### 🔄 扩展建议：\n\n- 添加多轮抽奖功能。\n- 加入动画效果或声音提示。\n- 使用本地存储保存中奖记录。\n- 与后端结合实现多人在线抽奖。\n\n如果你需要更高级的功能（如多人同时抽奖、后台管理、前端 UI 等），也可以告诉我，我可以继续帮你扩展。"
+    },
+    {
+      "role": "user",
+      "content": "写一个抽奖的代码"
+    },
+    {
+      "role": "assistant",
+      "content": "当然可以！下面是一个**简单但完整的 JavaScript 抽奖代码示例**，你可以直接在浏览器中运行。这个程序会从一个名单中随机选出一个中奖者。\n\n---\n\n### 🎁 简单抽奖 JavaScript 示例（可直接运行）\n\n```html\n<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>抽奖程序</title>\n</head>\n<body>\n\n<h2>抽奖程序</h2>\n<p id=\"result\">点击按钮开始抽奖...</p>\n<button onclick=\"draw()\">开始抽奖</button>\n\n<script>\n  // 参与者名单（可以是姓名、ID等）\n  const participants = [\"张三\", \"李四\", \"王五\", \"赵六\", \"孙七\", \"周八\", \"吴九\", \"郑十\"];\n\n  function draw() {\n    if (participants.length === 0) {\n      alert(\"没有可抽奖的参与者！\");\n      return;\n    }\n\n    // 随机选择一个中奖者\n    const randomIndex = Math.floor(Math.random() * participants.length);\n    const winner = participants[randomIndex];\n\n    // 显示中奖者\n    document.getElementById(\"result\").innerText = \"恭喜 \" + winner + \" 中奖了！\";\n\n    // 可选：移除中奖者，避免重复抽中\n    participants.splice(randomIndex, 1);\n  }\n</script>\n\n</body>\n</html>\n```\n\n---\n\n### ✅ 功能说明：\n\n- 有一个包含多个参与者的数组 `participants`。\n- 点击按钮后，使用 `Math.random()` 随机选择一个中奖者。\n- 中奖者名字显示在页面上。\n- 如果你希望每次抽奖不重复，可以使用 `splice()` 移除已中奖的人。\n\n---\n\n### 🔄 扩展建议（如果你需要）：\n\n- 添加多轮抽奖功能（如抽3人）。\n- 加入动画效果或声音提示。\n- 使用本地存储保存中奖记录。\n- 与后端结合实现多人在线抽奖。\n\n---\n\n如果你有特定需求（比如：抽奖人数、是否去重、抽奖次数、UI 设计等），欢迎告诉我，我可以帮你定制更复杂的版本！"
+    }
+  ],
+  "systemPrompt": "",
+  "model": "qwen-turbo",
+  "createdAt": "2026-05-28T02:46:08.329Z",
+  "updatedAt": "2026-05-28T02:58:27.677Z"
+}
