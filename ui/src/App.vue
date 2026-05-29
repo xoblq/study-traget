@@ -1,41 +1,25 @@
 <template>
   <div class="app">
-    <Sidebar
-      :conversations="conversations"
-      :currentId="currentConversationId"
-      @new="newChat"
-      @select="loadConversation"
-      @delete="deleteConversation"
-    />
+    <Sidebar :conversations="conversations" :currentId="currentConversationId" @new="newChat" @select="loadConversation"
+      @delete="deleteConversation" />
 
     <main class="main">
-      <Toolbar
-        :models="models"
-        :currentModel="currentModel"
-        @update:model="currentModel = $event"
-        @clear="clearChat"
-        @togglePrompt="showPromptPanel = !showPromptPanel"
-      />
+      <Toolbar :models="models" :currentModel="currentModel" @update:model="currentModel = $event" @clear="clearChat"
+        @togglePrompt="showPromptPanel = !showPromptPanel" />
 
-      <PromptPanel
-        v-if="showPromptPanel"
-        :value="systemPrompt"
-        @apply="applySystemPrompt"
-        @close="showPromptPanel = false"
-      />
+      <PromptPanel v-if="showPromptPanel" :value="systemPrompt" @apply="applySystemPrompt"
+        @close="showPromptPanel = false" />
 
       <ChatArea :messages="messages" ref="chatArea" />
 
-      <FilePreview
-        v-if="uploadedFile"
-        :file="uploadedFile"
-        @remove="removeFile"
-      />
+      <!-- 图片预览 -->
+      <ImagePreview v-if="imageFile" :file="imageFile" :previewUrl="imagePreviewUrl" @remove="removeImage" />
 
-      <InputArea
-        @send="sendMessage"
-        @upload="handleUpload"
-      />
+      <!-- 文件预览 -->
+      <FilePreview v-if="uploadedFile" :file="uploadedFile" @remove="removeFile" />
+
+      <InputArea :disabled="isGenerating" @send="sendMessage" @uploadImage="handleImageUpload"
+        @uploadFile="handleFileUpload" />
     </main>
   </div>
 </template>
@@ -47,10 +31,12 @@ import Toolbar from './components/Toolbar.vue'
 import PromptPanel from './components/PromptPanel.vue'
 import ChatArea from './components/ChatArea.vue'
 import FilePreview from './components/FilePreview.vue'
+import ImagePreview from './components/ImagePreview.vue'
 import InputArea from './components/InputArea.vue'
 import { getModels, chatStream } from './api/chat.js'
 import { getConversations, saveConversation, loadConversation as loadConv, deleteConversation as delConv } from './api/conversation.js'
 import { uploadFile, analyzeDocument } from './api/upload.js'
+import { uploadImage, analyzeImage } from './api/image.js'
 
 const models = ref([])
 const currentModel = ref('qwen-plus')
@@ -59,8 +45,16 @@ const currentConversationId = ref(null)
 const messages = ref([])
 const systemPrompt = ref('')
 const showPromptPanel = ref(false)
+
+// 文件相关
 const uploadedFile = ref(null)
 const uploadedText = ref(null)
+
+// 图片相关
+const imageFile = ref(null)
+const imagePreviewUrl = ref(null)
+const imageBase64 = ref(null)
+
 const isGenerating = ref(false)
 const chatArea = ref(null)
 
@@ -111,6 +105,7 @@ function newChat() {
   messages.value = []
   currentConversationId.value = null
   removeFile()
+  removeImage()
 }
 
 function clearChat() {
@@ -125,7 +120,39 @@ function applySystemPrompt(prompt) {
   showPromptPanel.value = false
 }
 
-async function handleUpload(file) {
+// 图片上传
+async function handleImageUpload(file) {
+  console.log('开始上传图片:', file.name)
+  imageFile.value = file
+
+  // 本地预览
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreviewUrl.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+
+  // 上传获取 base64
+  const result = await uploadImage(file)
+  console.log('上传结果:', result)
+
+  if (result.success) {
+    imageBase64.value = result.base64
+    console.log('base64 长度:', result.base64.length)
+  } else {
+    alert(result.error)
+    removeImage()
+  }
+}
+
+function removeImage() {
+  imageFile.value = null
+  imagePreviewUrl.value = null
+  imageBase64.value = null
+}
+
+// 文件上传
+async function handleFileUpload(file) {
   const result = await uploadFile(file)
   if (result.success) {
     uploadedFile.value = { name: result.filename, size: result.size }
@@ -140,12 +167,49 @@ function removeFile() {
   uploadedText.value = null
 }
 
+// 发送消息
 async function sendMessage(content) {
   if (!content || isGenerating.value) return
 
+  console.log('发送消息:', content)
+  console.log('imageBase64 存在:', !!imageBase64.value)
+  console.log('imageBase64 长度:', imageBase64.value ? imageBase64.value.length : 0)
+
   isGenerating.value = true
 
-  if (uploadedFile.value) {
+  // 图片分析
+  if (imageBase64.value) {
+    const imgFile = imageFile.value
+    const imgPreview = imagePreviewUrl.value
+
+    messages.value.push({
+      role: 'user',
+      content: content,
+      image: imgPreview
+    })
+    messages.value.push({ role: 'assistant', content: '' })
+
+
+    console.log(imageBase64.value, "imageBase64.value");
+
+    await analyzeImage(
+      imageBase64.value,
+      content,
+      (chunk) => {
+        messages.value[messages.value.length - 1].content += chunk
+      },
+      (fullContent) => {
+        messages.value[messages.value.length - 1].content = fullContent
+        save()
+      },
+      (error) => {
+        messages.value[messages.value.length - 1].content = `错误: ${error}`
+      }
+    )
+    removeImage()
+  }
+  // 文档分析
+  else if (uploadedFile.value) {
     messages.value.push({ role: 'user', content: `📎 ${uploadedFile.value.name}\n${content}` })
     messages.value.push({ role: 'assistant', content: '' })
 
@@ -156,7 +220,7 @@ async function sendMessage(content) {
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
-      (fullContent, usage) => {
+      (fullContent) => {
         messages.value[messages.value.length - 1].content = fullContent
         save()
         removeFile()
@@ -165,7 +229,9 @@ async function sendMessage(content) {
         messages.value[messages.value.length - 1].content = `错误: ${error}`
       }
     )
-  } else {
+  }
+  // 普通聊天
+  else {
     const apiMessages = []
     if (systemPrompt.value) {
       apiMessages.push({ role: 'system', content: systemPrompt.value })
@@ -181,7 +247,7 @@ async function sendMessage(content) {
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
-      (fullContent, usage) => {
+      (fullContent) => {
         messages.value[messages.value.length - 1].content = fullContent
         save()
       },

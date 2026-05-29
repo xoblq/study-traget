@@ -51,32 +51,46 @@ router.post("/upload", upload.single("image"), (req, res) => {
 
 // 分析图片
 router.post("/analyze", async (req, res) => {
+  console.log("收到图片分析请求");
+  console.log("请求体 keys:", Object.keys(req.body));
+  
   const { imageBase64, question } = req.body;
 
   if (!imageBase64) {
+    console.log("错误: 缺少图片数据");
     return res.status(400).json({ error: "缺少图片数据" });
   }
+
+  console.log("图片数据长度:", imageBase64.length);
+  console.log("问题:", question);
 
   // 设置 SSE 响应头
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
-  await analyzeImage(
-    imageBase64,
-    question,
-    (chunk, fullContent) => {
-      res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
-    },
-    (fullContent) => {
-      res.write(`data: ${JSON.stringify({ type: "done", content: fullContent })}\n\n`);
-      res.end();
-    },
-    (error) => {
-      res.write(`data: ${JSON.stringify({ type: "error", error })}\n\n`);
-      res.end();
-    }
-  );
+  try {
+    await analyzeImage(
+      imageBase64,
+      question,
+      (chunk, fullContent) => {
+        res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
+      },
+      (fullContent) => {
+        res.write(`data: ${JSON.stringify({ type: "done", content: fullContent })}\n\n`);
+        res.end();
+      },
+      (error) => {
+        console.log("分析错误:", error);
+        res.write(`data: ${JSON.stringify({ type: "error", error })}\n\n`);
+        res.end();
+      }
+    );
+  } catch (error) {
+    console.log("路由错误:", error);
+    res.write(`data: ${JSON.stringify({ type: "error", error: error.message })}\n\n`);
+    res.end();
+  }
 });
 
 export default router;
