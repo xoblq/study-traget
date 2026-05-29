@@ -191,6 +191,8 @@ function escapeHtml(text) {
   border-radius: 16px;
   line-height: 1.7;
   word-break: break-word;
+  white-space: pre-wrap;
+  min-width: 50px;
 }
 
 .message.assistant .message-content {

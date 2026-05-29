@@ -312,7 +312,7 @@ body {
 /* 用户消息样式 */
 .message.user .message-content {
   background: var(--user-msg);
-  max-width: 65%;
+  /* max-width: 65%; */
   border-top-right-radius: 4px;
 }
 
