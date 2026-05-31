@@ -13,6 +13,7 @@ import chatRoutes from "./modules/chat/routes.js";
 import storageRoutes from "./modules/storage/routes.js";
 import documentRoutes from "./modules/document/routes.js";
 import imageRoutes from "./modules/image/routes.js";
+import agentRoutes from "./modules/agent/routes.js";
 
 // 获取当前目录
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -32,6 +33,7 @@ app.use("/api", chatRoutes);
 app.use("/api", storageRoutes);
 app.use("/api/document", documentRoutes);
 app.use("/api/image", imageRoutes);
+app.use("/api/agent", agentRoutes);
 
 // 启动服务器
 app.listen(PORT, () => {

@@ -6,6 +6,14 @@
           {{ m.name }}
         </option>
       </select>
+      <button 
+        @click="$emit('toggleAgent')" 
+        class="btn-agent"
+        :class="{ active: isAgentMode }"
+        title="Agent 模式（可调用工具）"
+      >
+        🤖 Agent
+      </button>
     </div>
     <div class="toolbar-right">
       <button @click="$emit('togglePrompt')" class="btn-icon" title="系统提示词">
@@ -25,8 +33,86 @@
 <script setup>
 defineProps({
   models: Array,
-  currentModel: String
+  currentModel: String,
+  isAgentMode: Boolean
 })
 
-defineEmits(['update:model', 'clear', 'togglePrompt'])
+defineEmits(['update:model', 'clear', 'togglePrompt', 'toggleAgent'])
 </script>
+
+<style scoped>
+.toolbar {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+}
+
+.toolbar-left {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+}
+
+.select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn-agent {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-agent:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-agent.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+</style>

@@ -305,7 +305,7 @@ body {
 /* AI 消息样式 */
 .message.assistant .message-content {
   background: var(--bg-tertiary);
-  max-width: 75%;
+  /* max-width: 75%; */
   border-top-left-radius: 4px;
 }
 
@@ -346,7 +346,7 @@ body {
 .markdown-body h2 {
   font-size: 20px;
   font-weight: 600;
-  margin: 18px 0 10px 0;
+  /* margin: 18px 0 10px 0; */
   color: var(--accent);
 }
 
@@ -365,7 +365,7 @@ body {
 }
 
 .markdown-body p {
-  margin: 10px 0;
+  /* margin: 10px 0; */
 }
 
 .markdown-body strong {
@@ -380,7 +380,7 @@ body {
 
 .markdown-body ul,
 .markdown-body ol {
-  margin: 10px 0;
+  /* margin: 10px 0; */
   padding-left: 24px;
 }
 
@@ -408,7 +408,7 @@ body {
 .markdown-body hr {
   border: none;
   border-top: 1px solid var(--border);
-  margin: 16px 0;
+  /* margin: 16px 0; */
 }
 
 .markdown-body a {

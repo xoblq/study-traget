@@ -4,11 +4,26 @@
       @delete="deleteConversation" />
 
     <main class="main">
-      <Toolbar :models="models" :currentModel="currentModel" @update:model="currentModel = $event" @clear="clearChat"
-        @togglePrompt="showPromptPanel = !showPromptPanel" />
+      <Toolbar 
+        :models="models" 
+        :currentModel="currentModel" 
+        :isAgentMode="isAgentMode"
+        @update:model="currentModel = $event" 
+        @clear="clearChat"
+        @togglePrompt="showPromptPanel = !showPromptPanel"
+        @toggleAgent="isAgentMode = !isAgentMode"
+      />
 
       <PromptPanel v-if="showPromptPanel" :value="systemPrompt" @apply="applySystemPrompt"
         @close="showPromptPanel = false" />
+
+      <!-- 工具调用提示 -->
+      <div v-if="toolCalls.length > 0" class="tool-calls">
+        <div v-for="(tool, index) in toolCalls" :key="index" class="tool-call">
+          <span class="tool-icon">🔧</span>
+          <span class="tool-name">调用工具: {{ tool.name }}</span>
+        </div>
+      </div>
 
       <ChatArea :messages="messages" ref="chatArea" />
 
@@ -37,6 +52,7 @@ import { getModels, chatStream } from './api/chat.js'
 import { getConversations, saveConversation, loadConversation as loadConv, deleteConversation as delConv } from './api/conversation.js'
 import { uploadFile, analyzeDocument } from './api/upload.js'
 import { uploadImage, analyzeImage } from './api/image.js'
+import { agentChat } from './api/agent.js'
 
 const models = ref([])
 const currentModel = ref('qwen-plus')
@@ -45,6 +61,10 @@ const currentConversationId = ref(null)
 const messages = ref([])
 const systemPrompt = ref('')
 const showPromptPanel = ref(false)
+
+// Agent 模式
+const isAgentMode = ref(false)
+const toolCalls = ref([])
 
 // 文件相关
 const uploadedFile = ref(null)
@@ -77,6 +97,7 @@ async function loadConversation(id) {
   messages.value = data.messages || []
   systemPrompt.value = data.systemPrompt || ''
   currentModel.value = data.model || 'qwen-plus'
+  isAgentMode.value = data.isAgentMode || false
   loadConversations()
 }
 
@@ -95,7 +116,8 @@ async function save() {
     id: currentConversationId.value,
     messages: messages.value,
     systemPrompt: systemPrompt.value,
-    model: currentModel.value
+    model: currentModel.value,
+    isAgentMode: isAgentMode.value
   })
   currentConversationId.value = data.id
   loadConversations()
@@ -104,6 +126,7 @@ async function save() {
 function newChat() {
   messages.value = []
   currentConversationId.value = null
+  toolCalls.value = []
   removeFile()
   removeImage()
 }
@@ -122,7 +145,6 @@ function applySystemPrompt(prompt) {
 
 // 图片上传
 async function handleImageUpload(file) {
-  console.log('开始上传图片:', file.name)
   imageFile.value = file
 
   // 本地预览
@@ -134,11 +156,8 @@ async function handleImageUpload(file) {
 
   // 上传获取 base64
   const result = await uploadImage(file)
-  console.log('上传结果:', result)
-
   if (result.success) {
     imageBase64.value = result.base64
-    console.log('base64 长度:', result.base64.length)
   } else {
     alert(result.error)
     removeImage()
@@ -171,15 +190,11 @@ function removeFile() {
 async function sendMessage(content) {
   if (!content || isGenerating.value) return
 
-  console.log('发送消息:', content)
-  console.log('imageBase64 存在:', !!imageBase64.value)
-  console.log('imageBase64 长度:', imageBase64.value ? imageBase64.value.length : 0)
-
   isGenerating.value = true
+  toolCalls.value = []
 
   // 图片分析
   if (imageBase64.value) {
-    const imgFile = imageFile.value
     const imgPreview = imagePreviewUrl.value
 
     messages.value.push({
@@ -189,8 +204,7 @@ async function sendMessage(content) {
     })
     messages.value.push({ role: 'assistant', content: '' })
 
-
-    console.log(imageBase64.value, "imageBase64.value");
+    removeImage()
 
     await analyzeImage(
       imageBase64.value,
@@ -206,7 +220,6 @@ async function sendMessage(content) {
         messages.value[messages.value.length - 1].content = `错误: ${error}`
       }
     )
-    removeImage()
   }
   // 文档分析
   else if (uploadedFile.value) {
@@ -227,6 +240,33 @@ async function sendMessage(content) {
       },
       (error) => {
         messages.value[messages.value.length - 1].content = `错误: ${error}`
+      }
+    )
+  }
+  // Agent 模式
+  else if (isAgentMode.value) {
+    const apiMessages = [...messages.value, { role: 'user', content }]
+
+    messages.value.push({ role: 'user', content })
+    messages.value.push({ role: 'assistant', content: '' })
+
+    await agentChat(
+      apiMessages,
+      currentModel.value,
+      (chunk) => {
+        messages.value[messages.value.length - 1].content += chunk
+      },
+      (toolCall) => {
+        toolCalls.value.push(toolCall)
+      },
+      (fullContent) => {
+        messages.value[messages.value.length - 1].content = fullContent
+        toolCalls.value = []
+        save()
+      },
+      (error) => {
+        messages.value[messages.value.length - 1].content = `错误: ${error}`
+        toolCalls.value = []
       }
     )
   }
@@ -260,3 +300,28 @@ async function sendMessage(content) {
   isGenerating.value = false
 }
 </script>
+
+<style scoped>
+.tool-calls {
+  padding: 8px 40px;
+  background: rgba(79, 70, 229, 0.1);
+  border-bottom: 1px solid var(--border);
+}
+
+.tool-call {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tool-icon {
+  font-size: 14px;
+}
+
+.tool-name {
+  color: var(--accent);
+}
+</style>

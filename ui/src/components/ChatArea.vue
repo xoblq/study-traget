@@ -5,12 +5,7 @@
         <h1>AI Chat</h1>
         <p>开始一个新的对话吧</p>
       </div>
-      <div
-        v-for="(msg, index) in displayMessages"
-        :key="index"
-        class="message"
-        :class="msg.role"
-      >
+      <div v-for="(msg, index) in displayMessages" :key="index" class="message" :class="msg.role">
         <div class="message-avatar">
           {{ msg.role === 'user' ? 'U' : 'AI' }}
         </div>
@@ -20,11 +15,8 @@
             <img :src="msg.image" alt="用户上传的图片" />
           </div>
           <!-- 文本内容 -->
-          <div
-            class="message-content"
-            :class="{ 'markdown-body': msg.role === 'assistant' }"
-            v-html="renderContent(msg.content, msg.role)"
-          ></div>
+          <div class="message-content" :class="{ 'markdown-body': msg.role === 'assistant' }"
+            v-html="renderContent(msg.content, msg.role)"></div>
         </div>
       </div>
     </div>
@@ -63,7 +55,7 @@ marked.use({
       return `<pre><code class="hljs language-${lang || 'auto'}">${highlighted}</code></pre>`
     }
   },
-  breaks: true,
+  breaks: false,
   gfm: true
 })
 
@@ -85,6 +77,7 @@ function renderContent(content, role) {
   if (role === 'user') {
     // 用户消息：只转义 HTML，保留原始换行
     return escapeHtml(content).replace(/\n/g, '<br>')
+
   }
 
   // AI 消息：使用 markdown 渲染
@@ -207,35 +200,35 @@ function escapeHtml(text) {
 
 /* Markdown 样式 */
 .markdown-body :deep(h1) {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
-  margin: 20px 0 12px 0;
+  margin: 10px 0 6px 0;
   color: var(--accent);
   border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
+  padding-bottom: 4px;
 }
 
 .markdown-body :deep(h2) {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  margin: 18px 0 10px 0;
+  margin: 8px 0 4px 0;
   color: var(--accent);
 }
 
 .markdown-body :deep(h3) {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
-  margin: 16px 0 8px 0;
+  margin: 6px 0 3px 0;
 }
 
 .markdown-body :deep(h4) {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  margin: 14px 0 6px 0;
+  margin: 4px 0 2px 0;
 }
 
 .markdown-body :deep(p) {
-  margin: 10px 0;
+  margin: 2px 0;
 }
 
 .markdown-body :deep(strong) {
@@ -250,12 +243,12 @@ function escapeHtml(text) {
 
 .markdown-body :deep(ul),
 .markdown-body :deep(ol) {
-  margin: 10px 0;
-  padding-left: 24px;
+  margin: 2px 0;
+  padding-left: 20px;
 }
 
 .markdown-body :deep(li) {
-  margin: 6px 0;
+  margin: 1px 0;
 }
 
 .markdown-body :deep(ul li) {
@@ -268,8 +261,8 @@ function escapeHtml(text) {
 
 .markdown-body :deep(blockquote) {
   border-left: 4px solid var(--accent);
-  padding: 8px 16px;
-  margin: 12px 0;
+  padding: 4px 12px;
+  margin: 6px 0;
   background: rgba(79, 70, 229, 0.1);
   border-radius: 0 6px 6px 0;
   color: var(--text-secondary);
@@ -278,7 +271,7 @@ function escapeHtml(text) {
 .markdown-body :deep(hr) {
   border: none;
   border-top: 1px solid var(--border);
-  margin: 16px 0;
+  margin: 8px 0;
 }
 
 .markdown-body :deep(a) {
