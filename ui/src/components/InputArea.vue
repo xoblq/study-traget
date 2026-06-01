@@ -29,8 +29,16 @@
         placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
         rows="1"
         @input="autoResize"
+        :disabled="disabled"
       ></textarea>
-      <button @click="send" class="btn-send" :disabled="!canSend">
+      <!-- 暂停按钮 -->
+      <button v-if="disabled" @click="$emit('stop')" class="btn-stop" title="停止生成">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      </button>
+      <!-- 发送按钮 -->
+      <button v-else @click="send" class="btn-send" :disabled="!canSend">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
         </svg>
@@ -54,7 +62,7 @@ const props = defineProps({
   disabled: Boolean
 })
 
-const emit = defineEmits(['send', 'uploadImage', 'uploadFile'])
+const emit = defineEmits(['send', 'uploadImage', 'uploadFile', 'stop'])
 
 const input = ref('')
 const inputRef = ref(null)
@@ -72,7 +80,7 @@ function triggerFileInput() {
 }
 
 function send() {
-  if (input.value.trim()) {
+  if (input.value.trim() && !props.disabled) {
     emit('send', input.value.trim())
     input.value = ''
     autoResize()
@@ -173,12 +181,12 @@ function handleFile(file) {
 
 .input-wrapper:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 .input-wrapper.drag-over {
   border-color: var(--accent);
-  background: rgba(79, 70, 229, 0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .input-wrapper textarea {
@@ -195,6 +203,10 @@ function handleFile(file) {
 
 .input-wrapper textarea:focus {
   outline: none;
+}
+
+.input-wrapper textarea:disabled {
+  opacity: 0.7;
 }
 
 .input-wrapper textarea::placeholder {
@@ -224,9 +236,9 @@ function handleFile(file) {
 }
 
 .btn-send {
-  background: var(--accent);
+  background: var(--text-primary);
   border: none;
-  color: white;
+  color: var(--bg-primary);
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -234,17 +246,43 @@ function handleFile(file) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
+  transition: all 0.2s;
   flex-shrink: 0;
 }
 
 .btn-send:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--text-secondary);
 }
 
 .btn-send:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
+}
+
+.btn-stop {
+  background: var(--text-primary);
+  border: none;
+  color: var(--bg-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  animation: pulse 1.5s infinite;
+}
+
+.btn-stop:hover {
+  background: var(--text-secondary);
+  transform: scale(1.05);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .drop-zone {

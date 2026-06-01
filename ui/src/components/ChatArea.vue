@@ -156,8 +156,9 @@ function escapeHtml(text) {
 }
 
 .message.assistant .message-avatar {
-  background: var(--accent);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .message-body {
@@ -232,12 +233,12 @@ function escapeHtml(text) {
 }
 
 .markdown-body :deep(strong) {
-  color: #4f9cf7;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .markdown-body :deep(em) {
-  color: #a78bfa;
+  color: #cccccc;
   font-style: italic;
 }
 
@@ -263,7 +264,7 @@ function escapeHtml(text) {
   border-left: 4px solid var(--accent);
   padding: 4px 12px;
   margin: 6px 0;
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 0 6px 6px 0;
   color: var(--text-secondary);
 }
@@ -275,12 +276,12 @@ function escapeHtml(text) {
 }
 
 .markdown-body :deep(a) {
-  color: var(--accent);
-  text-decoration: none;
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 .markdown-body :deep(a:hover) {
-  text-decoration: underline;
+  color: #cccccc;
 }
 
 .markdown-body :deep(table) {

@@ -4,15 +4,9 @@
       @delete="deleteConversation" />
 
     <main class="main">
-      <Toolbar 
-        :models="models" 
-        :currentModel="currentModel" 
-        :isAgentMode="isAgentMode"
-        @update:model="currentModel = $event" 
-        @clear="clearChat"
-        @togglePrompt="showPromptPanel = !showPromptPanel"
-        @toggleAgent="isAgentMode = !isAgentMode"
-      />
+      <Toolbar :models="models" :currentModel="currentModel" :isAgentMode="isAgentMode"
+        @update:model="currentModel = $event" @clear="clearChat" @togglePrompt="showPromptPanel = !showPromptPanel"
+        @toggleAgent="isAgentMode = !isAgentMode" />
 
       <PromptPanel v-if="showPromptPanel" :value="systemPrompt" @apply="applySystemPrompt"
         @close="showPromptPanel = false" />
@@ -34,7 +28,7 @@
       <FilePreview v-if="uploadedFile" :file="uploadedFile" @remove="removeFile" />
 
       <InputArea :disabled="isGenerating" @send="sendMessage" @uploadImage="handleImageUpload"
-        @uploadFile="handleFileUpload" />
+        @uploadFile="handleFileUpload" @stop="stopGeneration" />
     </main>
   </div>
 </template>
@@ -77,6 +71,9 @@ const imageBase64 = ref(null)
 
 const isGenerating = ref(false)
 const chatArea = ref(null)
+
+// 中断控制器
+let abortController = null
 
 onMounted(async () => {
   await loadModels()
@@ -143,18 +140,25 @@ function applySystemPrompt(prompt) {
   showPromptPanel.value = false
 }
 
+// 停止生成
+function stopGeneration() {
+  if (abortController) {
+    abortController.abort()
+    abortController = null
+  }
+  isGenerating.value = false
+}
+
 // 图片上传
 async function handleImageUpload(file) {
   imageFile.value = file
 
-  // 本地预览
   const reader = new FileReader()
   reader.onload = (e) => {
     imagePreviewUrl.value = e.target.result
   }
   reader.readAsDataURL(file)
 
-  // 上传获取 base64
   const result = await uploadImage(file)
   if (result.success) {
     imageBase64.value = result.base64
@@ -192,6 +196,8 @@ async function sendMessage(content) {
 
   isGenerating.value = true
   toolCalls.value = []
+  abortController = new AbortController()
+  const signal = abortController.signal
 
   // 图片分析
   if (imageBase64.value) {
@@ -204,11 +210,12 @@ async function sendMessage(content) {
     })
     messages.value.push({ role: 'assistant', content: '' })
 
-    removeImage()
+
 
     await analyzeImage(
       imageBase64.value,
       content,
+      signal,
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
@@ -220,6 +227,8 @@ async function sendMessage(content) {
         messages.value[messages.value.length - 1].content = `错误: ${error}`
       }
     )
+    // 先清空 会到这拿到的imageBase64会丢失
+    removeImage()
   }
   // 文档分析
   else if (uploadedFile.value) {
@@ -230,6 +239,7 @@ async function sendMessage(content) {
       uploadedText.value,
       content,
       currentModel.value,
+      signal,
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
@@ -253,6 +263,7 @@ async function sendMessage(content) {
     await agentChat(
       apiMessages,
       currentModel.value,
+      signal,
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
@@ -284,6 +295,7 @@ async function sendMessage(content) {
     await chatStream(
       apiMessages,
       currentModel.value,
+      signal,
       (chunk) => {
         messages.value[messages.value.length - 1].content += chunk
       },
@@ -297,6 +309,7 @@ async function sendMessage(content) {
     )
   }
 
+  abortController = null
   isGenerating.value = false
 }
 </script>
@@ -304,7 +317,7 @@ async function sendMessage(content) {
 <style scoped>
 .tool-calls {
   padding: 8px 40px;
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid var(--border);
 }
 

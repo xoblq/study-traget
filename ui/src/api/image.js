@@ -19,31 +19,22 @@ export async function uploadImage(file) {
 }
 
 /**
- * 分析图片（流式）
- * @param {string} imageBase64 - 图片 base64
- * @param {string} question - 用户问题
- * @param {Function} onChunk - 收到数据块回调
- * @param {Function} onDone - 完成回调
- * @param {Function} onError - 错误回调
+ * 处理 SSE 流
  */
-export async function analyzeImage(imageBase64, question, onChunk, onDone, onError) {
+async function processStream(response, signal, onChunk, onDone, onError) {
+  let fullContent = ''
   try {
-    const response = await fetch('/api/image/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64, question })
-    })
-
-    if (!response.ok) {
-      onError(`HTTP 错误: ${response.status}`)
-      return
-    }
-
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
 
     while (true) {
+      if (signal.aborted) {
+        reader.cancel()
+        onDone(fullContent)
+        return
+      }
+
       const { done, value } = await reader.read()
 
       if (value) {
@@ -61,9 +52,10 @@ export async function analyzeImage(imageBase64, question, onChunk, onDone, onErr
             if (jsonStr) {
               const data = JSON.parse(jsonStr)
               if (data.type === 'chunk') {
-                onChunk(data.content)
+                fullContent += data.content
+                onChunk(data.content, fullContent)
               } else if (data.type === 'done') {
-                onDone(data.content)
+                onDone(data.content || fullContent)
                 return
               } else if (data.type === 'error') {
                 onError(data.error)
@@ -77,11 +69,40 @@ export async function analyzeImage(imageBase64, question, onChunk, onDone, onErr
       }
 
       if (done) {
-        onDone('')
+        onDone(fullContent)
         return
       }
     }
   } catch (error) {
-    onError(error.message)
+    if (error.name === 'AbortError') {
+      onDone(fullContent)
+    } else {
+      onError(error.message)
+    }
+  }
+}
+
+/**
+ * 分析图片（流式）
+ */
+export async function analyzeImage(imageBase64, question, signal, onChunk, onDone, onError) {
+  try {
+    const response = await fetch('/api/image/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, question }),
+      signal
+    })
+
+    if (!response.ok) {
+      onError(`HTTP 错误: ${response.status}`)
+      return
+    }
+
+    await processStream(response, signal, onChunk, onDone, onError)
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      onError(error.message)
+    }
   }
 }

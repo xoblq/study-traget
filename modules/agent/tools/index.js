@@ -19,7 +19,6 @@ export function registerTool(tool) {
     throw new Error('工具必须包含 name 和 execute 属性')
   }
   tools.set(tool.name, tool)
-  console.log(`[Agent] 注册工具: ${tool.name}`)
 }
 
 /**

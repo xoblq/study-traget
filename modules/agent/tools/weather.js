@@ -154,25 +154,18 @@ const weatherTool = {
   },
   
   async execute({ city }) {
-    console.log(`[天气工具] 查询城市: ${city}`)
     
     try {
       // 先尝试 wttr.in
-      console.log('[天气工具] 尝试 wttr.in...')
       const result = await fetchFromWttr(city)
-      console.log('[天气工具] wttr.in 成功')
       return result
     } catch (error) {
-      console.log('[天气工具] wttr.in 失败:', error.message)
       
       try {
         // 备用：OpenMeteo
-        console.log('[天气工具] 尝试 OpenMeteo...')
         const result = await fetchFromOpenMeteo(city)
-        console.log('[天气工具] OpenMeteo 成功')
         return result
       } catch (error2) {
-        console.log('[天气工具] OpenMeteo 也失败:', error2.message)
         return {
           success: false,
           error: `天气查询失败: ${error2.message}`
