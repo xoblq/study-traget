@@ -17,7 +17,6 @@ const router = express.Router();
 router.get("/tools", (req, res) => {
   const tools = getAllTools();
   res.json(tools);
-  console.log(res.json(tools),'resjson');
 });
 
 // Agent 对话（流式）

@@ -3,7 +3,17 @@
     <Sidebar :conversations="conversations" :currentId="currentConversationId" @new="newChat" @select="loadConversation"
       @delete="deleteConversation" />
 
-    <main class="main">
+    <main class="main" @dragenter.prevent="onDragEnter" @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave"
+      @drop.prevent="onDrop">
+      <!-- 拖拽提示 -->
+      <div v-if="showDropZone" class="drop-zone">
+        <div class="drop-zone-content">
+          <el-icon class="upload-icon"><Upload /></el-icon>
+          <p>释放文件以上传</p>
+          <span>支持图片、PDF、Word 文件</span>
+        </div>
+      </div>
+
       <Toolbar :models="models" :currentModel="currentModel" :isAgentMode="isAgentMode"
         @update:model="currentModel = $event" @clear="clearChat" @togglePrompt="showPromptPanel = !showPromptPanel"
         @toggleAgent="isAgentMode = !isAgentMode" />
@@ -14,7 +24,7 @@
       <!-- 工具调用提示 -->
       <div v-if="toolCalls.length > 0" class="tool-calls">
         <div v-for="(tool, index) in toolCalls" :key="index" class="tool-call">
-          <span class="tool-icon">🔧</span>
+          <span class="tool-icon"></span>
           <span class="tool-name">调用工具: {{ tool.name }}</span>
         </div>
       </div>
@@ -27,14 +37,15 @@
       <!-- 文件预览 -->
       <FilePreview v-if="uploadedFile" :file="uploadedFile" @remove="removeFile" />
 
-      <InputArea :disabled="isGenerating" @send="sendMessage" @uploadImage="handleImageUpload"
-        @uploadFile="handleFileUpload" @stop="stopGeneration" />
+      <InputArea :disabled="isGenerating" @send="sendMessage" @uploadFile="handleFileUpload" @stop="stopGeneration" />
     </main>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import Sidebar from './components/Sidebar.vue'
 import Toolbar from './components/Toolbar.vue'
 import PromptPanel from './components/PromptPanel.vue'
@@ -72,6 +83,10 @@ const imageBase64 = ref(null)
 const isGenerating = ref(false)
 const chatArea = ref(null)
 
+// 拖拽相关
+const showDropZone = ref(false)
+let dragCounter = 0
+
 // 中断控制器
 let abortController = null
 
@@ -99,7 +114,15 @@ async function loadConversation(id) {
 }
 
 async function deleteConversation(id) {
-  if (!confirm('确定要删除这个对话吗？')) return
+  try {
+    await ElMessageBox.confirm('确定要删除这个对话吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
   await delConv(id)
   if (currentConversationId.value === id) {
     newChat()
@@ -120,6 +143,65 @@ async function save() {
   loadConversations()
 }
 
+// 拖拽处理
+function onDragEnter(e) {
+  e.preventDefault()
+  dragCounter++
+  showDropZone.value = true
+}
+
+function onDragOver(e) {
+  e.preventDefault()
+}
+
+function onDragLeave(e) {
+  e.preventDefault()
+  dragCounter--
+  if (dragCounter === 0) {
+    showDropZone.value = false
+  }
+}
+
+function onDrop(e) {
+  e.preventDefault()
+  dragCounter = 0
+  showDropZone.value = false
+
+  const files = e.dataTransfer.files
+  if (files.length > 0) {
+    const file = files[0]
+    console.log('拖拽文件:', file.name, file.type, file.size)
+
+    // 根据扩展名判断类型
+    const ext = file.name.split('.').pop().toLowerCase()
+
+    if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+      if (file.size > 20 * 1024 * 1024) {
+        ElMessage.warning('图片大小不能超过 20MB')
+        return
+      }
+      handleImageUpload(file)
+    } else if (['pdf', 'docx', 'doc'].includes(ext)) {
+      if (file.size > 10 * 1024 * 1024) {
+        ElMessage.warning('文件大小不能超过 10MB')
+        return
+      }
+      handleFileUpload(file)
+    } else {
+      ElMessage.warning('支持的文件格式：图片、PDF、Word')
+    }
+  }
+}
+
+function isImageFile(file) {
+  return file.type.startsWith('image/')
+}
+
+function isDocFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase()
+  return ['pdf', 'docx', 'doc'].includes(ext)
+}
+
 function newChat() {
   messages.value = []
   currentConversationId.value = null
@@ -128,11 +210,18 @@ function newChat() {
   removeImage()
 }
 
-function clearChat() {
+async function clearChat() {
   if (messages.value.length === 0) return
-  if (confirm('确定要清空当前对话吗？')) {
-    newChat()
+  try {
+    await ElMessageBox.confirm('确定要清空当前对话吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch {
+    return
   }
+  newChat()
 }
 
 function applySystemPrompt(prompt) {
@@ -163,7 +252,7 @@ async function handleImageUpload(file) {
   if (result.success) {
     imageBase64.value = result.base64
   } else {
-    alert(result.error)
+    ElMessage.error(result.error)
     removeImage()
   }
 }
@@ -181,7 +270,7 @@ async function handleFileUpload(file) {
     uploadedFile.value = { name: result.filename, size: result.size }
     uploadedText.value = result.text
   } else {
-    alert(result.error)
+    ElMessage.error(result.error)
   }
 }
 
@@ -315,6 +404,50 @@ async function sendMessage(content) {
 </script>
 
 <style scoped>
+.main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.drop-zone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.drop-zone-content {
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.upload-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.drop-zone-content p {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.drop-zone-content span {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .tool-calls {
   padding: 8px 40px;
   background: rgba(255, 255, 255, 0.05);

@@ -6,27 +6,31 @@
           {{ m.name }}
         </option>
       </select>
-      <button @click="$emit('toggleAgent')" class="btn-agent" :class="{ active: isAgentMode }" title="Agent 模式（可调用工具）">
+      <button 
+        @click="$emit('toggleAgent')" 
+        class="btn-agent"
+        :class="{ active: isAgentMode }"
+        title="Agent 模式（可调用工具）"
+      >
         Agent
       </button>
     </div>
     <div class="toolbar-right">
+      <ThemeToggle />
       <button @click="$emit('togglePrompt')" class="btn-icon" title="系统提示词">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-        </svg>
+        <el-icon><Setting /></el-icon>
       </button>
       <button @click="$emit('clear')" class="btn-icon" title="清空对话">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-        </svg>
+        <el-icon><Delete /></el-icon>
       </button>
     </div>
   </header>
 </template>
 
 <script setup>
+import { Setting, Delete } from '@element-plus/icons-vue'
+import ThemeToggle from './ThemeToggle.vue'
+
 defineProps({
   models: Array,
   currentModel: String,
@@ -54,7 +58,8 @@ defineEmits(['update:model', 'clear', 'togglePrompt', 'toggleAgent'])
 
 .toolbar-right {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  align-items: center;
 }
 
 .select {
@@ -65,11 +70,27 @@ defineEmits(['update:model', 'clear', 'togglePrompt', 'toggleAgent'])
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+:root.light .select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .select:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .btn-agent {
@@ -84,8 +105,8 @@ defineEmits(['update:model', 'clear', 'togglePrompt', 'toggleAgent'])
 }
 
 .btn-agent:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 
 .btn-agent.active {
@@ -105,6 +126,7 @@ defineEmits(['update:model', 'clear', 'togglePrompt', 'toggleAgent'])
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 18px;
 }
 
 .btn-icon:hover {

@@ -6,15 +6,17 @@
         <span class="preview-name">{{ file.name }}</span>
         <span class="preview-size">{{ formatSize(file.size) }}</span>
       </div>
-      <button @click="$emit('remove')" class="btn-remove" title="移除图片">&times;</button>
+      <button @click="$emit('remove')" class="btn-remove" title="移除图片">
+        <el-icon><Close /></el-icon>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { Close } from '@element-plus/icons-vue'
 
-const props = defineProps({
+defineProps({
   file: Object,
   previewUrl: String
 })
@@ -80,7 +82,7 @@ function formatSize(bytes) {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;

@@ -75,13 +75,15 @@ function renderContent(content, role) {
   if (!content) return ''
 
   if (role === 'user') {
-    // 用户消息：只转义 HTML，保留原始换行
     return escapeHtml(content).replace(/\n/g, '<br>')
-
   }
 
-  // AI 消息：使用 markdown 渲染
-  return marked(String(content))
+  // AI 消息：去掉多余空行，再用 markdown 渲染
+  const cleaned = String(content)
+    .replace(/\n{2,}/g, '\n')  // 连续3个以上换行变成2个
+    .trim()
+
+  return marked(cleaned)
 }
 
 function escapeHtml(text) {
@@ -229,11 +231,16 @@ function escapeHtml(text) {
 }
 
 .markdown-body :deep(p) {
-  margin: 2px 0;
+  margin: 0;
+  padding: 2px 0;
+}
+
+.markdown-body :deep(p + p) {
+  margin-top: 4px;
 }
 
 .markdown-body :deep(strong) {
-  color: #ffffff;
+  color: #959090;
   font-weight: 600;
 }
 

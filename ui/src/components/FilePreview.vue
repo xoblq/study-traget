@@ -1,20 +1,21 @@
 <template>
-  <div class="file-info">
-    <div class="file-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
-      </svg>
+  <div class="file-preview">
+    <div class="file-preview-content">
+      <el-icon class="file-icon"><Document /></el-icon>
+      <div class="file-info">
+        <span class="file-name">{{ file.name }}</span>
+        <span class="file-size">{{ formatSize(file.size) }}</span>
+      </div>
+      <button @click="$emit('remove')" class="btn-remove" title="移除文件">
+        <el-icon><Close /></el-icon>
+      </button>
     </div>
-    <div class="file-details">
-      <span class="file-name">{{ file.name }}</span>
-      <span class="file-size">{{ formatSize(file.size) }}</span>
-    </div>
-    <button @click="$emit('remove')" class="btn-icon" title="移除文件">&times;</button>
   </div>
 </template>
 
 <script setup>
+import { Document, Close } from '@element-plus/icons-vue'
+
 defineProps({
   file: Object
 })
@@ -27,3 +28,68 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 </script>
+
+<style scoped>
+.file-preview {
+  margin: 0 40px 12px;
+}
+
+.file-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.file-icon {
+  font-size: 24px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.file-size {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.btn-remove {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+</style>
