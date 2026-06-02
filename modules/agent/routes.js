@@ -10,6 +10,8 @@ import { getAllTools } from "./tools/index.js";
 // 导入工具（会自动注册）
 import "./tools/weather.js";
 import "./tools/calculator.js";
+import "./tools/search.js";
+import "./tools/stock.js";
 
 const router = express.Router();
 

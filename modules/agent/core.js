@@ -51,6 +51,7 @@ export async function agentChat(messages, model, onChunk, onToolCall, onDone, on
     ];
 
     // 第一次调用：让 AI 决定是否需要调用工具
+    console.log('[Agent] 调用 AI，工具数量:', tools.length)
     const response = await client.chat.completions.create({
       model: model || "qwen-plus",
       messages: fullMessages,
@@ -59,11 +60,15 @@ export async function agentChat(messages, model, onChunk, onToolCall, onDone, on
     });
 
     const assistantMessage = response.choices[0].message;
+    console.log('[Agent] AI 响应:', assistantMessage.content ? '有内容' : '无内容')
+    console.log('[Agent] 工具调用:', assistantMessage.tool_calls ? assistantMessage.tool_calls.length : 0)
     
     // 检查是否有工具调用
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
       // 通知前端正在调用工具
       for (const toolCall of assistantMessage.tool_calls) {
+        console.log('[Agent] 调用工具:', toolCall.function.name)
+        console.log('[Agent] 工具参数:', toolCall.function.arguments)
         onToolCall({
           id: toolCall.id,
           name: toolCall.function.name,
@@ -76,6 +81,7 @@ export async function agentChat(messages, model, onChunk, onToolCall, onDone, on
       for (const toolCall of assistantMessage.tool_calls) {
         const args = JSON.parse(toolCall.function.arguments);
         const result = await executeTool(toolCall.function.name, args);
+        console.log('[Agent] 工具结果:', result.substring(0, 200) + '...')
         
         toolResults.push({
           tool_call_id: toolCall.id,
