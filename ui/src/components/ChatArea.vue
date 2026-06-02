@@ -202,6 +202,10 @@ function escapeHtml(text) {
 }
 
 /* Markdown 样式 */
+.markdown-body {
+  white-space: normal;
+}
+
 .markdown-body :deep(h1) {
   font-size: 20px;
   font-weight: 600;
