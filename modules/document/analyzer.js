@@ -23,7 +23,6 @@ export async function analyzeDocument(text, question, model, onChunk, onDone, on
     {
       role: "system",
       content: `你是一个专业的文档分析助手。你的任务是：
-
 1. **总结文档**：首先给出文档的核心摘要（2-3句话）
 2. **提取要点**：用列表形式列出关键信息和重点内容
 3. **回答问题**：针对用户的具体问题给出详细回答

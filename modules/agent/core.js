@@ -52,6 +52,7 @@ export async function agentChat(messages, model, onChunk, onToolCall, onDone, on
 
     // 第一次调用：让 AI 决定是否需要调用工具
     console.log('[Agent] 调用 AI，工具数量:', tools.length)
+    console.log(tools,'tools');
     const response = await client.chat.completions.create({
       model: model || "qwen-plus",
       messages: fullMessages,

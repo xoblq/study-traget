@@ -63,7 +63,7 @@ router.post("/analyze", async (req, res) => {
     question,
     model,
     // 收到一块数据
-    (chunk, fullContent) => {
+    (chunk) => {
       res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
     },
     // 完成
