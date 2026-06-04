@@ -73,7 +73,7 @@ const toolCalls = ref([])
 
 // 文件相关
 const uploadedFile = ref(null)
-const uploadedText = ref(null)
+const uploadedDocumentId = ref(null)
 
 // 图片相关
 const imageFile = ref(null)
@@ -268,7 +268,7 @@ async function handleFileUpload(file) {
   const result = await uploadFile(file)
   if (result.success) {
     uploadedFile.value = { name: result.filename, size: result.size }
-    uploadedText.value = result.text
+    uploadedDocumentId.value = result.documentId
   } else {
     ElMessage.error(result.error)
   }
@@ -276,7 +276,7 @@ async function handleFileUpload(file) {
 
 function removeFile() {
   uploadedFile.value = null
-  uploadedText.value = null
+  uploadedDocumentId.value = null
 }
 
 // 发送消息
@@ -320,12 +320,12 @@ async function sendMessage(content) {
     removeImage()
   }
   // 文档分析
-  else if (uploadedFile.value) {
+  else if (uploadedFile.value && uploadedDocumentId.value) {
     messages.value.push({ role: 'user', content: `📎 ${uploadedFile.value.name}\n${content}` })
     messages.value.push({ role: 'assistant', content: '' })
 
     await analyzeDocument(
-      uploadedText.value,
+      uploadedDocumentId.value,
       content,
       currentModel.value,
       signal,

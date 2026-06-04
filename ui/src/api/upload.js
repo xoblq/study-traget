@@ -85,12 +85,12 @@ async function processStream(response, signal, onChunk, onDone, onError) {
 /**
  * 分析文档（流式）
  */
-export async function analyzeDocument(text, question, model, signal, onChunk, onDone, onError) {
+export async function analyzeDocument(documentId, question, model, signal, onChunk, onDone, onError) {
   try {
     const response = await fetch('/api/document/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, question, model }),
+      body: JSON.stringify({ documentId, question, model }),
       signal
     })
 

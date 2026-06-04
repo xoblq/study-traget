@@ -14,6 +14,7 @@ import storageRoutes from "./modules/storage/routes.js";
 import documentRoutes from "./modules/document/routes.js";
 import imageRoutes from "./modules/image/routes.js";
 import agentRoutes from "./modules/agent/routes.js";
+import { initDatabase } from "./modules/document/db.js";
 
 // 获取当前目录
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,9 @@ app.use("/api", storageRoutes);
 app.use("/api/document", documentRoutes);
 app.use("/api/image", imageRoutes);
 app.use("/api/agent", agentRoutes);
+
+// 初始化数据库
+initDatabase();
 
 // 启动服务器
 app.listen(PORT, () => {

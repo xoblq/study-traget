@@ -39,7 +39,7 @@ router.post("/chat", async (req, res) => {
       messages,
       model,
       // 收到数据块
-      (chunk, fullContent) => {
+      (chunk) => {
         res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
       },
       // 工具调用

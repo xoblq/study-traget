@@ -37,7 +37,6 @@ router.post("/upload", upload.single("image"), (req, res) => {
 
     // 转为 base64
     const base64 = req.file.buffer.toString("base64");
-
     res.json({
       success: true,
       filename,
@@ -73,7 +72,7 @@ router.post("/analyze", async (req, res) => {
     await analyzeImage(
       imageBase64,
       question,
-      (chunk, fullContent) => {
+      (chunk) => {
         res.write(`data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`);
       },
       (fullContent) => {
