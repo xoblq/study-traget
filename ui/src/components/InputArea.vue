@@ -8,7 +8,8 @@
         ref="inputRef"
         v-model="input"
         @keydown.enter.exact.prevent="send"
-        placeholder="输入消息... (Enter 发送, Shift+Enter 换行，可拖拽文件到任意位置上传)"
+        @paste="onPaste"
+        placeholder="输入消息... (Enter 发送, Shift+Enter 换行，可拖拽文件到任意位置上传，支持粘贴图片)"
         rows="1"
         @input="autoResize"
         :disabled="disabled"
@@ -82,6 +83,31 @@ function onFileSelect(e) {
     }
   }
   e.target.value = ''
+}
+
+/**
+ * 处理粘贴事件，支持直接粘贴图片和文件
+ * @param {ClipboardEvent} e 粘贴事件对象
+ */
+function onPaste(e) {
+  const items = e.clipboardData?.items
+  if (!items) return
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
+    if (item.kind === 'file') {
+      const file = item.getAsFile()
+      if (file) {
+        if (file.type.startsWith('image/')) {
+          e.preventDefault()
+          emit('uploadImage', file)
+        } else {
+          e.preventDefault()
+          emit('uploadFile', file)
+        }
+      }
+    }
+  }
 }
 </script>
 

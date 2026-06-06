@@ -37,7 +37,7 @@
       <!-- 文件预览 -->
       <FilePreview v-if="uploadedFile" :file="uploadedFile" @remove="removeFile" />
 
-      <InputArea :disabled="isGenerating" @send="sendMessage" @uploadFile="handleFileUpload" @stop="stopGeneration" />
+      <InputArea :disabled="isGenerating" @send="sendMessage" @uploadImage="handleImageUpload" @uploadFile="handleFileUpload" @stop="stopGeneration" />
     </main>
   </div>
 </template>
